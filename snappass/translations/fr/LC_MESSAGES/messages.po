@@ -22,8 +22,8 @@ msgid "en"
 msgstr "fr"
 
 #: snappass/templates/base.html:4
-msgid "Snappass - Share Secrets"
-msgstr "Snappass - Partagez vos secrets !"
+msgid "TMSS Secrets"
+msgstr "TMSS Secrets - Partagez vos secrets !"
 
 #: snappass/templates/base.html:16
 msgid "Share Secret"

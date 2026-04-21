@@ -23,8 +23,8 @@ msgid "en"
 msgstr "nl"
 
 #: snappass/templates/base.html:4
-msgid "Snappass - Share Secrets"
-msgstr "Snappass - Deel Wachtwoorden"
+msgid "TMSS Secrets"
+msgstr "TMSS Secrets - Deel Wachtwoorden"
 
 #: snappass/templates/base.html:16
 msgid "Share Secret"
