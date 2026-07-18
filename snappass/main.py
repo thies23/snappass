@@ -10,6 +10,7 @@ from redis.exceptions import ConnectionError
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 from urllib.parse import urljoin
+from urllib.parse import urlsplit
 from distutils.util import strtobool
 # _ is required to get the Jinja templates translated
 from flask_babel import Babel, _  # noqa: F401
@@ -54,6 +55,19 @@ TIME_CONVERSION = {'two weeks': 1209600, 'week': 604800, 'day': 86400,
                    'hour': 3600}
 DEFAULT_API_TTL = 1209600
 MAX_TTL = DEFAULT_API_TTL
+
+
+def _request_has_trusted_host(req):
+    # When HOST_OVERRIDE is not configured the base URL is derived from the
+    # request's Host header, which a client can spoof. Only loopback hosts are
+    # trusted for that fallback (local/dev use); production should set
+    # HOST_OVERRIDE to its canonical hostname.
+    parsed = urlsplit('//' + req.host)
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    normalized_hostname = hostname.lower().rstrip('.')
+    return normalized_hostname in {'localhost', '127.0.0.1', '::1'}
 
 
 def check_redis_alive(fn):
@@ -201,16 +215,15 @@ def clean_input():
 
 
 def set_base_url(req):
-    if NO_SSL:
-        if HOST_OVERRIDE:
-            base_url = f'http://{HOST_OVERRIDE}/'
-        else:
-            base_url = req.url_root
+    scheme = 'http' if NO_SSL else 'https'
+    if HOST_OVERRIDE:
+        base_url = f'{scheme}://{HOST_OVERRIDE}/'
     else:
-        if HOST_OVERRIDE:
-            base_url = f'https://{HOST_OVERRIDE}/'
-        else:
-            base_url = req.url_root.replace("http://", "https://")
+        if not _request_has_trusted_host(req):
+            abort(400)
+        base_url = req.url_root
+        if not NO_SSL:
+            base_url = base_url.replace("http://", "https://")
     if URL_PREFIX:
         base_url = base_url + URL_PREFIX.strip("/") + "/"
     return base_url
